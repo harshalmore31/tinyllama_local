@@ -1,0 +1,140 @@
+ 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Integration Example</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+        }
+        H2{
+        font-size : 30px;
+       }
+        input, button {
+            padding: 10px;
+            margin: 5px 0;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        button:active {
+            opacity: 0.6; /* Button color fades when clicked */
+        }
+        #output {
+            margin-top: 20px;
+        }
+        footer{
+          margin: 0px auto;
+          margin-top: 20px;
+          text-align: center;
+            padding: 10px 0;
+            background-color: #f0f0f0;
+            position: sticky;
+            bottom: 0;
+            max-width: 600px;
+}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Tinyllama Local : San Fran </h2>
+        <form id="apiForm">
+            <label for="prompt">Enter your prompt:</label>
+            <input type="text" id="prompt" name="prompt" required>
+            <button type="submit">Submit</button>
+        </form>
+        <div id="output"></div>
+    </div>
+    <footer>
+        <p>&copy; 2024 Harshal More. All rights reserved.</p>
+    </footer> 
+    <script>
+        const apiUrl = 'http://137.184.189.184:5000/generate';
+
+        document.getElementById('apiForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const promptValue = document.getElementById('prompt').value;
+
+            const data = {
+                model: 'tinyllama',
+                prompt: promptValue,
+                stream: true
+            };
+
+            const outputElement = document.getElementById('output');
+            outputElement.innerText = ''; // Clear previous output
+
+            fetch(apiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    console.error('Response details:', response.status, response.statusText);
+                    throw new Error(`Network response was not ok (${response.status} ${response.statusText})`);
+                }
+
+                // Read the response as a stream
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder("utf-8");
+                let buffer = '';
+
+                function processStream({ done, value }) {
+                    if (done) {
+                        console.log('Stream complete');
+                        return;
+                    }
+
+                    // Decode the chunk into a string
+                    const chunk = decoder.decode(value, { stream: true });
+                    buffer += chunk;
+
+                    // Split the buffer by newlines to separate SSE data messages
+                    const lines = buffer.split('\n');
+
+                    for (let i = 0; i < lines.length - 1; i++) {
+                        const line = lines[i].trim();
+                        
+                        if (line.startsWith('data:')) {
+                            // Remove "data: " prefix and parse JSON
+                            const jsonString = line.slice(5).trim();
+                            try {
+                                const jsonData = JSON.parse(jsonString);
+                                if (jsonData.response) {
+                                    if (outputElement.innerText.length > 0) {
+                                        outputElement.innerText += ' ';
+                                    }
+                                    outputElement.innerText += jsonData.response;
+                                }
+                            } catch (e) {
+                                console.error('Failed to parse JSON:', e);
+                            }
+                        }
+                    }
+
+                    // Keep the last partial line in the buffer for the next chunk
+                    buffer = lines[lines.length - 1];
+
+                    // Continue reading the next chunk
+                    return reader.read().then(processStream);
+                }
+
+                return reader.read().then(processStream);
+            })
+            .catch(error => {console.error('API Error:', error);
+                outputElement.innerText = 'Error: ' + error.message;
+            });
+        });
+    </script>
+</body>
+</html>
