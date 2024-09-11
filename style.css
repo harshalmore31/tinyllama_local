@@ -1,0 +1,34 @@
+ 
+body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+        }
+        H2{
+        font-size : 30px;
+       }
+        input, button {
+            padding: 10px;
+            margin: 5px 0;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        button:active {
+            opacity: 0.6; /* Button color fades when clicked */
+        }
+        #output {
+            margin-top: 20px;
+        }
+        footer{
+          margin: 0px auto;
+          margin-top: 20px;
+          text-align: center;
+            padding: 10px 0;
+            background-color: #f0f0f0;
+            position: sticky;
+            bottom: 0;
+            max-width: 600px;
+}
