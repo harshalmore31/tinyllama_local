@@ -1,5 +1,5 @@
  
-const apiUrl = 'http://137.184.189.184:5000/generate';
+const apiUrl = 'https://137.184.189.184:5000/generate';
 
         document.getElementById('apiForm').addEventListener('submit', function(event) {
             event.preventDefault();
